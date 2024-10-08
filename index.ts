@@ -14,6 +14,7 @@ const getMdPath = () => {
 }
 
 const replaceUrl = (content: string, prefix: string = 'images'): { updateContent: string, filePathMap: Map<string, string> } => {
+  let idx = 0;
   const regex = /!\[(.*?)\]\((https?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp|svg))\)/g
   const filePathSet = new Set<string>()
   const filePathMap = new Map<string, string>()
@@ -24,14 +25,27 @@ const replaceUrl = (content: string, prefix: string = 'images'): { updateContent
     const fileName = url.split('/').pop();  // 获取文件名，例如 "image1.jpg"
     let filePath = generateFilePath(fileName, prefix)
     if (filePathSet.has(filePath)) {
-      filePath = generateFilePath(`${Date.now()}-${fileName}`, prefix)
+      filePath = generateFilePath(`${idx}-${fileName}`, prefix)
+      idx++
     }
     filePathSet.add(filePath)
     filePathMap.set(filePath, url)
     return `![${altText}](${filePath})`;  // 返回新的Markdown图片格式
   })
+  const yuQueRegex = /!\[(.*?)\]\((https:\/\/cdn\.nlark\.com\/yuque.*?)(?=\))/g;
+  const yuQueUpdateContent = updateContent.replace(yuQueRegex, (match, altText, url) => {
+    const fileName = altText;  // 获取文件名，例如 "image1.jpg"
+    let filePath = generateFilePath(fileName, prefix)
+    if (filePathSet.has(filePath)) {
+      filePath = generateFilePath(`${idx}-${fileName}`, prefix)
+      idx++
+    }
+    filePathSet.add(filePath)
+    filePathMap.set(filePath, url)
+    return `![${altText}](${filePath}`;  // 返回新的Markdown图片格式
+  })
   return {
-    updateContent: updateContent,
+    updateContent: yuQueUpdateContent,
     filePathMap
   }
 }
